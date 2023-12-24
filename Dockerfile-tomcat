@@ -1,0 +1,37 @@
+# Use the official Ubuntu base image
+FROM ubuntu:latest
+
+# Set environment variables
+ENV TZ=UTC
+
+# Update the package repository and install necessary tools
+RUN apt-get update && \
+    apt-get install -y \
+    openjdk-8-jdk \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the environment variables for Java
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH=$PATH:$JAVA_HOME/bin
+
+# Download and install Apache Tomcat
+ENV TOMCAT_VERSION 9.0.60
+ENV CATALINA_HOME /opt/tomcat
+
+RUN wget --quiet --no-cookies --no-check-certificate \
+    "https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz" \
+    -O /tmp/tomcat.tar.gz && \
+    tar xzvf /tmp/tomcat.tar.gz -C /opt && \
+    ln -s /opt/apache-tomcat-${TOMCAT_VERSION} $CATALINA_HOME && \
+    rm /tmp/tomcat.tar.gz
+
+# Expose port 8080 for Tomcat
+EXPOSE 8080
+
+# Remove unnecessary files
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Start Tomcat
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
